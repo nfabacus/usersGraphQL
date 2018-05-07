@@ -11,7 +11,7 @@ const {
 
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
-  fields: ()=>({
+  fields: ()=>({  //wrap in arrow function as a closure scope, so this will not execute untill after the entire file is executed/UserType is defined.
     id: { type: GraphQLString },
     name: { type: GraphQLString },
     description: { type: GraphQLString },
@@ -27,7 +27,7 @@ const CompanyType = new GraphQLObjectType({
 
 const UserType = new GraphQLObjectType({
   name: 'User',
-  fields: ()=>({
+  fields: ()=>({  //wrap in arrow function as a closure scope, so this will not execute untill after the entire file is executed/CompanyType is defined.
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age:{ type: GraphQLInt},
@@ -70,12 +70,35 @@ const mutation = new GraphQLObjectType({
     addUser: {
       type: UserType,
       args: {
-        firstName: { type: new GraphQLNonNull(GraphQLString) },
-        age: { type: new GraphQLNonNull(GraphQLInt) },
+        firstName: { type: new GraphQLNonNull(GraphQLString) }, //GraphQLNonNull requires the value to be required (validation)
+        age: { type: new GraphQLNonNull(GraphQLInt) },  //GraphQLNonNull requires the value to be required (validation)
         companyId: { type: GraphQLString }
       },
       resolve(parentValue, { firstName, age }) {
         return axios.post('http://localhost:3000/users', { firstName, age })
+          .then(res=>res.data)
+      }
+    },
+    deleteUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) } //GraphQLNonNull requires the value to be required (validation)
+      },
+      resolve(parentValue, { id }) {
+        return axios.delete(`http://localhost:3000/users/${id}`)
+          .then(res=>res.data)
+      }
+    },
+    editUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString)},
+        firstName: { type: GraphQLString }, //GraphQLNonNull requires the value to be required (validation)
+        age: { type: GraphQLInt },  //GraphQLNonNull requires the value to be required (validation)
+        companyId: { type: GraphQLString }
+      },
+      resolve(parentValue, args) {
+        return axios.patch(`http://localhost:3000/users/${args.id}`, args)
           .then(res=>res.data)
       }
     }
